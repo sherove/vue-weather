@@ -1,18 +1,24 @@
 <template>
-  <div id="app">
+  <div id="app" :class="typeof weather.main != 'undefined' && weather.main.temp > 11 ? 'warm' : ''">
     <main>
       <div class="search-box">
-        <input type="text" class="search-bar" placeholder="Search..."/>
+        <input 
+          type="text" 
+          class="search-bar" 
+          placeholder="Search..." 
+          v-model="query"
+          @keypress="fetchWeather"
+        />
       </div>
-
-      <div class="wearher-wrap">
+      {{ query }}
+      <div class="wearher-wrap" v-if="typeof weather.main != 'undefined'">
         <div class="location-box">
-          <div class="location">Northampton, UK</div>
-          <div class="date">Monday 20 January 2022</div>
+          <div class="location"> {{ weather.name }}, {{ weather.sys.country}} </div>
+          <div class="date">{{ dateBuilder() }}</div>
         </div>
         <div class="weather-box">
-          <div class="temp">9℃</div>
-          <div class="weather">Rain</div>
+          <div class="temp">{{ Math.round(weather.main.temp) }}℃</div>
+          <div class="weather">{{ weather.weather[0].main }}</div>
         </div>
       </div>
     </main>
@@ -26,7 +32,36 @@ export default {
   data() {
     return {
       api_key: '6835cef70b71366787e36baa4cd37fbf',
-      url_base: ''
+      url_base: 'https://api.openweathermap.org/data/2.5/',
+      query: '',
+      weather: {}
+    }
+  },
+  methods : {
+    async fetchWeather(e) {
+      if (e.key == 'Enter') {
+        let response = await fetch(`${this.url_base}weather?q=${this.query}&units=metric&APPID=${this.api_key}`);
+        let json = await response.json();
+        this.weather = await json
+        
+      }
+    },
+    setResults(result) {
+      this.weather = result
+    },
+    dateBuilder() {
+      let d = new Date()
+      let months = ["January", "Feburary", "March", "April", "May", "June", "July",
+        "August", "September", "October", "November", "Devember"
+      ]
+      let days = ["Sunday", "Monday", "Tuesday", "Wednessday", "Thursday", "Friday", "Saturday"]
+
+      let day = days[d.getDay()]
+      let date = d.getDate()
+      let month = months[d.getMonth()]
+      let year = d.getFullYear()
+
+      return `${day} ${date} ${month} ${year}`;
     }
   }
 }
@@ -47,6 +82,10 @@ export default {
     background-size: cover;
     background-position: bottom;
     transition: 0.4s;
+  }
+
+  #app.warm {
+    background-image: url('./assets/warm-bg.jpg');
   }
 
   main {
